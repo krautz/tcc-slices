@@ -29,7 +29,7 @@ struct qosmetricsaggregated{
 	uint32_t txPackets;//Usado apenas no método GatherQoSStatistics
 };
 
-std::string defaultPath = "/home/pedro/Documents/ns-allinone-3.29-caio/";
+std::string defaultPath = "/home/caio/tcc-slices/";
 
 
 std::map<int, attributes> flowMonitorPastFields;

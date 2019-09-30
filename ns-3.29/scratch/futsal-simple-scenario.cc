@@ -384,6 +384,8 @@ int main(int argc, char *argv[]) {
 	cmd.AddValue("flowPath", "Path to store flow monitor traces", flowPath);
 	cmd.AddValue("simTime", "Total duration of the simulation in ms", simTime);
 	cmd.AddValue("enableTraces", "Enable traces", enableTraces);
+    cmd.AddValue("dynamicSlicing", "Enable dynamic slicing", DYNAMICSLICING);
+    cmd.AddValue("rgbGranulatiry", "Enable rgb granulatiry", RBGGRANULARITY);
 	cmd.Parse(argc, argv);
 
 

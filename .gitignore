@@ -1,1 +1,9 @@
 /Release/
+ns-3.29/build
+ns-3.29/waf-tools
+ns-3.29/.waf*
+ns-3.29/monitoring_per_second
+ns-3.29/monitoring_aggregated
+ns-3.29/metrics
+ns-3.29/*.txt
+netanim-3.108

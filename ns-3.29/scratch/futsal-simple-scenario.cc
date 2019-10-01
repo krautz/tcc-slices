@@ -297,9 +297,9 @@ int main(int argc, char *argv[]) {
 
 
 	// initialize traces storage file
-	std::string pcapPath = defaultPath+"metrics/futsal-simple-scenario";
-	std::string animPath = defaultPath+"metrics/futsal-simple-scenario-animation.xml";
-	std::string flowPath = defaultPath+"metrics/futsal-simple-scenario-flow.xml";
+	std::string pcapPath = defaultPath+"ns-3.29/metrics/futsal-simple-scenario";
+	std::string animPath = defaultPath+"ns-3.29/metrics/futsal-simple-scenario-animation.xml";
+	std::string flowPath = defaultPath+"ns-3.29/metrics/futsal-simple-scenario-flow.xml";
 
 	// initialize simulation properties
 	int simTime = 10000;

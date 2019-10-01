@@ -14,6 +14,7 @@
 #include "ns3/network-module.h"
 #include "ns3/on-off-helper.h"
 #include "ns3/point-to-point-module.h"
+#include "ns3/rng-seed-manager.h"
 #include "futsal-simple-scenario.h"
 
 using namespace ns3;
@@ -381,7 +382,14 @@ int main(int argc, char *argv[]) {
 	cmd.AddValue("enableTraces", "Enable traces", enableTraces);
     cmd.AddValue("dynamicSlicing", "Enable dynamic slicing", DYNAMICSLICING);
     cmd.AddValue("rgbGranulatiry", "Enable rgb granulatiry", RBGGRANULARITY);
+    cmd.AddValue("seed", "Simulation seed", seed);
 	cmd.Parse(argc, argv);
+
+    // set simulation seed
+    RngSeedManager::SetSeed(seed);
+
+    // set simulation run times
+    RngSeedManager::SetRun(7);
 
     // set simulation time in seconds
     int simTime_seconds = simTime / 1000;

@@ -171,7 +171,7 @@ void setNodeRandomPosition(double xMin, double xMax, double yMin, double yMax,
 	nodeMobility.SetPositionAllocator(positionAlloc);
 	nodeMobility.SetMobilityModel("ns3::RandomWalk2dMobilityModel", "Mode",
 			StringValue("Time"), "Time", StringValue("100ms"), "Speed",
-			StringValue("ns3::ConstantRandomVariable[Constant=1.0]"), "Bounds",
+			StringValue("ns3::ConstantRandomVariable[Constant=10.0]"), "Bounds",
 			RectangleValue(rectangle));
 
 	// install the mobility model set on the node
@@ -295,7 +295,6 @@ int main(int argc, char *argv[]) {
 	// initialize number of spectators
 	int spectators = 5;
 
-
 	// initialize traces storage file
 	std::string pcapPath = defaultPath+"ns-3.29/metrics/futsal-simple-scenario";
 	std::string animPath = defaultPath+"ns-3.29/metrics/futsal-simple-scenario-animation.xml";
@@ -305,9 +304,6 @@ int main(int argc, char *argv[]) {
 	int simTime = 10000;
 	bool enableTraces = false;
 
-	//Adicionei
-	//##############@Pedro##################
-	int simTime_seconds = simTime/1000;
 	/*##########################################
 	4 Modos de Execucao:
 	Estatico + Subframe: estatico subframe
@@ -315,56 +311,55 @@ int main(int argc, char *argv[]) {
 	Estatico + RBG: estatico rbg
 	Dinamico + RBG: dinamico rbg
 	##########################################*/
+    bool DYNAMICSLICING = true; // colocar if para setar tipo de alocação
+    bool RBGGRANULARITY = true;
+    bool SHARE_SLICE_BETWEEN_UEs = false; //Deixa como false.
 
-	std::string tipoAlocacao = "dinamico";
-	std::string granularidade = "rbg";
+    // declare alocation type and granulatiry strings
+    std::string tipoAlocacao;
+	std::string granularidade;
 
-	bool DYNAMICSLICING = true;
-	bool RBGGRANULARITY = true;
-	bool SHARE_SLICE_BETWEEN_UEs = false; //Deixa como false.
-	//bool BASH_ARGS = false;
-	//bool Trace_USEDRBs = false;
-
-	int nbRBsDownlink = 100;
+    // set number of resource block in each way
+    int nbRBsDownlink = 100;
 	int nbRBGsSubframeDownlink = 25;
 	int nbRBsUplink = 100;
 	int nbRBGsSubframeUplink = 100;
 
-	configurationParameters(nbRBsDownlink, nbRBsUplink);
-
+    // set downlonk slice ues
 	std::vector<int> ues_slice_1;
 	std::vector<int> ues_slice_2;
 	std::vector<int> ues_slice_3;
 	std::vector<int> ues_slice_4;
 
+    // set uplink slice ues
 	std::vector<int> ues_slice_11;
 	std::vector<int> ues_slice_12;
 	std::vector<int> ues_slice_13;
 	std::vector<int> ues_slice_14;
 
-	slicesIDToTimeDuration[1] = simTime_seconds;
-	slicesIDToTimeDuration[2] = slicesIDToTimeDuration[1];
-	slicesIDToTimeDuration[3] = slicesIDToTimeDuration[1];
-	slicesIDToTimeDuration[4] = slicesIDToTimeDuration[1];
-	slicesIDToTimeDuration[11] = slicesIDToTimeDuration[1];
-	slicesIDToTimeDuration[12] = slicesIDToTimeDuration[1];
-	slicesIDToTimeDuration[13] = slicesIDToTimeDuration[1];
-	slicesIDToTimeDuration[14] = slicesIDToTimeDuration[1];
+    // field - Downlink (slice 1) and Uplink (slice 11) TCP
+	uint16_t transmissionPortSlice_1_11 = 1000;
 
+    // audio - Downlink UDP (slice 2)
+	uint16_t transmissionPortSlice_2 = 2000;
 
-	//Ports Numbers --- To MAP the Slices to their statistics
-	//If the slices change, the method Classify in class Ipv4FlowClassifier may also need to be changed
+    // image - Downlink (slice 3) and Uplink (slice 13) FTP
+	uint16_t transmissionPortSlice_3_13 = 3000;
 
-	uint16_t transmissionPortSlice_1_11 = 1000; // Field --- Downlink e Uplink (Vale para os dois quando é TCP)
-	uint16_t transmissionPortSlice_2 = 2000; // Audio
-	uint16_t transmissionPortSlice_3_13 = 3000; // IMG FTP
-	uint16_t transmissionPortSlice_4_14 = 4000; // TXT FTP
-	uint16_t transmissionPortSlice_12 = 12000; // Video
+    // text - Downlink (slice 4) and Uplink (slice 14) FTP
+	uint16_t transmissionPortSlice_4_14 = 4000;
 
+    // video - Uplink (slice 12) UDP
+	uint16_t transmissionPortSlice_12 = 12000;
 
+    // define file name string
+    stringstream ss;
 
+    // initialize seed
+	int seed = 1;
 
-	//############################################################
+    // define total number of UEs
+	int nbUEs;
 
 	// parse command line arguments
 	CommandLine cmd;
@@ -388,6 +383,45 @@ int main(int argc, char *argv[]) {
     cmd.AddValue("rgbGranulatiry", "Enable rgb granulatiry", RBGGRANULARITY);
 	cmd.Parse(argc, argv);
 
+    // set simulation time in seconds
+    int simTime_seconds = simTime / 1000;
+    slicesIDToTimeDuration[1] = simTime_seconds;
+	slicesIDToTimeDuration[2] = slicesIDToTimeDuration[1];
+	slicesIDToTimeDuration[3] = slicesIDToTimeDuration[1];
+	slicesIDToTimeDuration[4] = slicesIDToTimeDuration[1];
+	slicesIDToTimeDuration[11] = slicesIDToTimeDuration[1];
+	slicesIDToTimeDuration[12] = slicesIDToTimeDuration[1];
+	slicesIDToTimeDuration[13] = slicesIDToTimeDuration[1];
+	slicesIDToTimeDuration[14] = slicesIDToTimeDuration[1];
+
+    // configure parameters
+    configurationParameters(nbRBsDownlink, nbRBsUplink);
+
+    // set allocation type
+    if (DYNAMICSLICING == true)
+    {
+        tipoAlocacao = "dinamico";
+    }
+    else
+    {
+        tipoAlocacao = "estatico";
+    }
+
+    // set granularity
+    if (RBGGRANULARITY == true)
+    {
+        granularidade = "rbg";
+    }
+    else
+    {
+        granularidade = "subframe";
+    }
+
+    // set total number of UEs
+    nbUEs = 4 + 4 * spectators;
+
+    // set file sufixes
+	ss << seed << "_" << nbUEs;
 
 	NS_LOG_INFO("========== Set Helpers ==========\n");
 
@@ -797,21 +831,12 @@ int main(int argc, char *argv[]) {
 			ues_slice_1, ues_slice_2, ues_slice_3, ues_slice_4, ues_slice_11, ues_slice_12, ues_slice_13, ues_slice_14
 			);
 
-
 	// set simulation stop time
 	Simulator::Stop(MilliSeconds(simTime));
-
-	//###########@Pedro#################
-
-	stringstream ss;
-	int seed = 1;
-	int nbUEs = 10;
-	ss << seed << "_" << nbUEs;
 
 	Ptr<FlowMonitor> flowMonitor;
 	// install flow monitor in all nodes
 	flowMonitor = flowHelper.InstallAll();
-
 
 	//Monitoramento
 	if(Trace_SplitMonitoringPerSecond == true){
@@ -842,12 +867,6 @@ int main(int argc, char *argv[]) {
 		Simulator::Schedule(Seconds(simTime_seconds - 0.001), &GatherQoSStatistics, &flowHelper, flowMonitor, finalDest, simTime_seconds);
 	}
 
-
-	//###################################
-
-
-
-
 	// run simulation with traces if requested
 	if (enableTraces) {
 		// enable pcap files
@@ -855,9 +874,6 @@ int main(int argc, char *argv[]) {
 
 		// enable traces
 		lteHelper->EnableTraces();
-
-		// install flow monitor in all nodes
-		//flowHelper.InstallAll();
 
 		// set animation traces recorder
 		AnimationInterface anim(animPath);

@@ -51,6 +51,67 @@ cleanSimulation()
 
 }
 
+generateGraphics()
+{
+    rm -rf ./graphics/dinamico_rbg/delay/*
+    rm -rf ./graphics/dinamico_rbg/jitter/*
+    rm -rf ./graphics/dinamico_rbg/lost_packets/*
+    rm -rf ./graphics/dinamico_rbg/throughput/*
+    
+    rm -rf ./graphics/estatico_rbg/delay/*
+    rm -rf ./graphics/estatico_rbg/jitter/*
+    rm -rf ./graphics/estatico_rbg/lost_packets/*
+    rm -rf ./graphics/estatico_rbg/throughput/*
+
+
+    
+    python3 graphicgenerator.py dinamico downlink delay
+    python3 graphicgenerator.py dinamico uplink delay
+
+    python3 graphicgenerator.py dinamico downlink jitter
+    python3 graphicgenerator.py dinamico uplink jitter
+
+    python3 graphicgenerator.py dinamico downlink lost_packets
+    python3 graphicgenerator.py dinamico uplink lost_packets
+
+    python3 graphicgenerator.py dinamico downlink throughput
+    python3 graphicgenerator.py dinamico uplink throughput
+
+
+
+    python3 graphicgenerator.py estatico downlink delay
+    python3 graphicgenerator.py estatico uplink delay
+
+    python3 graphicgenerator.py estatico downlink jitter
+    python3 graphicgenerator.py estatico uplink jitter
+
+    python3 graphicgenerator.py estatico downlink lost_packets
+    python3 graphicgenerator.py estatico uplink lost_packets
+
+    python3 graphicgenerator.py estatico downlink throughput
+    python3 graphicgenerator.py estatico uplink throughput
+}
+
+generateCompoundGraphics()
+{
+    rm -rf ./graphics/compound/delay/*
+    rm -rf ./graphics/compound/jitter/*
+    rm -rf ./graphics/compound/lost_packets/*
+    rm -rf ./graphics/compound/throughput/*
+
+    python3 compoundgraphicgenerator.py downlink delay
+    python3 compoundgraphicgenerator.py uplink delay
+
+    python3 compoundgraphicgenerator.py downlink jitter
+    python3 compoundgraphicgenerator.py uplink jitter
+
+    python3 compoundgraphicgenerator.py downlink lost_packets
+    python3 compoundgraphicgenerator.py uplink lost_packets
+
+    python3 compoundgraphicgenerator.py downlink throughput
+    python3 compoundgraphicgenerator.py uplink throughput
+}
+
 simulateFutsal()
 {
     local sim_time="$1"

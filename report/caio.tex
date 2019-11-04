@@ -1,0 +1,245 @@
+\documentclass[11pt, twocolumn, a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[brazil]{babel}
+\usepackage{times}
+\usepackage{listings}
+\usepackage{graphicx}
+\graphicspath{ {images/} }
+\usepackage{caption}
+\usepackage{url}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{amsmath}
+\usepackage[export]{adjustbox}
+\usepackage{tabularx}
+\usepackage{dcolumn}
+\usepackage{multirow}
+\usepackage{booktabs}
+\usepackage{indentfirst}
+\usepackage{balance}
+\usepackage{flushend}
+\usepackage{geometry}
+\geometry{top=2.0cm, bottom=1.8cm, left=2.3cm, right=2.2cm}
+
+\usepackage{blindtext}
+\title{Verificação de Assinaturas Baseada em \\ Técnicas de Aprendizado de Máquina Profundo}
+\author{Aluno: Heitor Boschirolli (RA 169477) \\ Orientador: Prof. Hélio Pedrini (Matrícula 293318) \\[0.2cm] Instituto de Computação, Universidade Estadual de Campinas \\ Campinas-SP 13083-852}
+\date{Agosto de 2018}
+
+\begin{document}
+
+\tolerance = 999
+\sloppy
+
+\maketitle
+
+\section{Introdução}
+
+Autenticação biométrica é o processo de autenticação de indivíduos (verificar se ele é quem diz que é) usando como medida alguma de suas características físicas ou comportamentais únicas. No caso das características físicas, medidas biológicas tais como propriedades da íris e impressões digitais são usadas como medidas, enquanto que, no caso das características comportamentais, propriedades tais como o modo de falar, agir e caligrafia são empregadas~\cite{hafemann}.
+
+Os processos de autenticação biométrica possuem várias vantagens em relação aos métodos tradicionais de autenticação como senhas, cartões e PINs ({\it personal identification numbers} ou número de identificação pessoal), pois esses podem ser esquecidos, perdidos ou roubados e não há nenhuma verificação se a pessoa que os usa é realmente o dono do {\it token}. Por esses motivos, a autenticação biométrica é usada em várias de aplicações de segurança.
+
+Trabalhos de aprendizado de máquina permitiram uma autenticação rápida e confiável para algumas dessas medidas (reconhecimento facial, impressão digital, reconhecimento de iris são alguns exemplos)~\cite{alvarez}. Outras, entretanto, ainda não tiveram um resultado suficientemente bom para serem adotados na prática; dentre elas, encontra-se a verificação de assinaturas automatizada que tem como objetivo classificar uma assinatura como genuína ou falsificada.
+
+A tarefa de verificação de assinaturas é especialmente interessante pois elas são uma forma de identificação amplamente adotada no cotidiano~\cite{plamodon}. Legitimação de contratos legais, operações bancárias e contratos administrativos são algumas das áreas em que o uso de assinaturas é amplamente utilizado~\cite{hannes}. Como consequência disso, um grande número de assinaturas é gerado todos os dias e a sua verificação é feita (quando ocorre) manualmente por especialistas~\cite{hannes}.
+
+O problema de verificação de assinaturas pode ser dividido em {\it online} (dinâmico) e {\it offline} (estático). Na verificação online, a assinatura é obtida com auxílio de um equipamento eletrônico capaz de detectar informações como ângulo, velocidade e pressão aplicada pela caneta em cada instante da assinatura. Na verificação offline, apenas uma imagem com a assinatura está disponível; assim sendo, bem menos informações sobre como a assinatura foi feita estão disponíveis, tornando-o mais difícil, mas como na grande maioria das aplicações o equipamento eletrônico para produzir uma assinatura online não está disponível, a verificação offline é mais interessante do ponto de vista de aplicações práticas. Por esse motivo, esse é o problema explorado neste trabalho.
+
+Além da separação em online e offline existe uma divisão do problema de acordo com a dependência do autor. É possível treinar um modelo para cada autor ou um único modelo para todos os autores disponíveis.
+
+\begin{figure}[!htb]
+\centering
+\includegraphics[width=0.4\textwidth, frame]{intra-class.png}
+\caption{Exemplos de várias assinaturas de um mesmo autor sobrepostas. Pode-se notar uma alta variação intra-classe~\cite{intra_class}.}
+\label{intra_class_image}
+\end{figure}
+
+\section{Bases de Dados}
+
+Nesta seção, algumas bases de dados comumente utilizadas no problema de verificação de assinaturas são brevemente descritas.
+
+\subsection{GPDS Signature}
+
+O GPDS Signature 960~\cite{gpds} é provavelmente a base de dados mais usada em publicações sobre verificação de assinaturas, entretanto, ela não está mais disponível publicamente. Para substituí-la, foi criada base GPDS {\it Synthetic Signature}~\cite{gpds synthetic}, composta por assinaturas sintéticas.
+
+Idealmente, preferiria-se usar o GPDS 960 para testar resultados, tanto pelo fato de que isso possibilitaria uma comparação de resultados com um maior número de autores, quanto por essa ser a maior bases com assinaturas não sintéticas disponíveis. No entanto, como ela não está mais disponível, o GPDS {\it Synthetic Signature} é uma boa alternativa pois possui um grande número de amostras.
+
+Para obter acesso à base de dados GPDS {\it Synthetic Signature}, é preciso entrar em contato com a equipe por ele responsável, durante o período da pesquisa, no entanto, não se conseguiu acesso a base de dados.
+
+\subsection{MCYT-75}
+
+A base MCYT-75~\cite{mcyt}, apesar de possuir menos amostras do que a GPDS-960 e ao GPDS {\it Synthetic}, também é muito usada em publicações na tarefa de verificação de assinaturas. Isso a torna bastante valiosa para o propósito de comparação de resultados.
+
+Assim como o GPDS {\it Synthetic}, para obter acesso à base MCYT-75 é preciso pedir autorização para os responsáveis via e-mail. Não obtivemos resposta sobre o acesso a esta base de dados, portanto ela não pode ser utilizada em nossos experimentos.
+
+\subsection{UTSig}
+
+Como não se conseguiu acesso às outras bases de dados, a base UTSig~\cite{utsig} foi usada para realizar os experimentos. Diferentemente das bases mencionadas anteriormente, esta está disponível publicamente, ou seja, sem a necessidade de uma autorização.
+
+O conjunto de dados persa de assinatura offline (UTSig) tem assinaturas de 115 autores, contendo 27 assinaturas genuínas, 3 amostras assinadas com a mão não dominante e 42 forjadas para cada autor~\cite{utsig}.
+
+\section{Experimento 2}
+
+Nesta seção, informações sobre o segundo experimento realizado neste trabalho são fornecidas.
+
+\subsection{Trabalhos Relacionados}
+
+Em~\cite{checks paper}, realizou-se um estudo sobre a robustez das características baseadas nos níveis de cinza da imagem quando distorcidos por um fundo complexo e propostos features mais estáveis a variação dos níveis de cinza.
+
+Um conjunto de diferentes cheques e documentos de fundo variável é combinado com as assinaturas das bases de dados MCYT e GPDS. Para combinar as imagens é usado um modelo baseado na multiplicação.
+
+Os modelos são treinados com assinaturas genuínas em fundo branco e testados com outras genuínas e falsificações combinadas com diferentes fundos.
+
+\begin{table*}[!htb]
+\setlength{\tabcolsep}{1mm}
+\centering
+\caption{Resultados obtidos no experimento 2.}
+\label{resultados exp2}
+\begin{tabular}{ccc}
+\toprule
+ & Acurácia no conjunto de validação & ERR (média $\pm$ desvio padrão) \\
+\midrule
+Reportado em~\cite{hafemann2} & não mencionado & 3.13 $ \pm$ 0.46 \\
+Obtido na reprodução local~\cite{hafemann2} & 90.6\% & 3.32 $\pm$ 0.17 \\
+Obtido com o {\it one-class} SVM & 81.5\% & não medido \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\subsection{Metodologia}
+
+Para juntar as imagens das assinaturas aos documentos foi usada uma técnica baseada em multiplicação e a avaliação do modelo segue o mesmo protocolo do primeiro experimento.
+
+\subsubsection{Pré-processamento}
+
+Alguns dos cheques e documentos usados são coloridos, como as assinaturas da base de dados UTSig estão em escala de cinza, os cheques e documentos foram todos convertidos para escala de cinza.
+
+Antes de juntar os fundos e as assinaturas em uma só imagem, é preciso obter uma versão binária da imagem com a assinatura. Em~\cite{checks paper}, usa-se um limiar fixo para a binarização. Nos experimentos feitos com a base UTSig, foi percebido que um limiar fixo não era o suficiente para produzir bons resultados, então optou-se pelo limiarizador de Otsu~\cite{otsu1985}.
+
+Para fazer a mistura das duas imagens é preciso que elas possuam o mesmo tamanho; para isso as imagens contendo as assinaturas foram redimensionadas para 300$\times$480 usando um processamento similar ao descrito em~\cite{hafemann2}. Em seguida, foi selecionada uma área de 300$\times$480 pixels em cada cheque e documento de forma que o centro da área fosse o centro do campo da assinatura. Na Figura~\ref{whole-cheque} é possível ver um dos documentos usados em~\cite{checks paper} e, na igura~\ref{cropped-cheque}, a área de 300$\times$480 pixels com centro no campo de assinatura.
+
+\begin{figure}[!htb]
+\centering
+\includegraphics[width=0.4\textwidth, frame]{whole_cheque.jpg}
+\caption{Um dos documentos disponibilizados pelo autor de~\cite{checks paper}.}
+\label{whole-cheque}
+\end{figure}
+
+\begin{figure}[!htb]
+\centering
+\includegraphics[width=0.4\textwidth, frame]{cropped_cheque.png}
+\caption{Área de 300$\times$480 pixels em torno do centro do local para a assinatura do documento da imagem~\ref{whole-cheque}.}
+\label{cropped-cheque}
+\end{figure}
+
+\subsubsection{Mistura dos cheques e assinaturas}
+As assinaturas e os fundos - cheques e documentos - foram misturadas usando um a mesma técnica descrita em~\cite{checks paper}. Como após o pré-processamento as assinaturas e os fundos possuem as mesmas dimensões, a imagem resultante da junção é dada pela equação~\eqref{formula blend} em que $C(x, y)$ é a imagem do cheque após o pré-processamento, $I(x, y)$ é a imagem contendo a assinatura e $I_{Bin}$ é a imagem $I(x, y)$ após a binarização. 
+
+\begin{figure}[!htb]
+\centering
+\includegraphics[width=0.4\textwidth, frame]{sig.png}
+\caption{Assinatura da base de dados UTSig.}
+\label{sig}
+\end{figure}
+
+Na Figura~\ref{sig-on-cheque}, pode-se observar a assinatura da Figura~\ref{sig} em um dos documentos.
+\begin{equation}
+\label{formula blend}
+I_D(x, y)=\begin{cases}
+C(x, y) & \text{se $I_{Bin}=0$}.\\
+C(x, y) \frac{I(x, y)}{255}, & \text{caso contrário}.
+\end{cases}
+\end{equation}
+
+\begin{figure}[!htb]
+\centering
+\includegraphics[width=0.4\textwidth, frame]{sig_on_cheque.png}
+\caption{Assinatura mostrada na Figura~\ref{sig} inserida em um dos documentos disponibilizados.}
+\label{sig-on-cheque}
+\end{figure}
+
+\subsection{Resultados}
+
+Abaixo as EERs obtidas utilizando o modelo descrito em \cite{hafemann2} nas assinaturas com fundo complexo.
+
+\begin{table*}[!htb]
+	\setlength{\tabcolsep}{1mm}
+	\centering
+	\caption{Resultados.}
+	\label{resultados}
+	\begin{tabular}{ccc}
+		\toprule
+		& amostras para treino & ERR (média $\pm$ desvio padrão) \\
+		\midrule
+		Imagens com fundo simples & 5 & 10.75 $ \pm$ 0.61 \\
+		Imagens com fundo simples & 10 & 9.03 $ \pm$ 0.55 \\
+		Imagens com fundo simples & 12 & 8.84 $ \pm$ 0.35 \\
+		Imagens com fundo complexo & 5 & 19.22 $ \pm$ 0.75 \\
+		Imagens com fundo complexo & 10 & 16.80 $ \pm$ 0.54 \\
+		Imagens com fundo complexo & 12 & 15.56 $ \pm$ 0.58 \\
+		\bottomrule
+	\end{tabular}
+\end{table*}
+
+\addcontentsline{toc}{section}{Referências}
+\begin{thebibliography}{9}
+
+\bibitem{plamodon} 
+R. Plamondon, S.N. Srihari. Online and Off-line Handwriting Recognition: A Comprehensive Survey, 2000.
+
+\bibitem{hannes} 
+Hannes Rantzsch, Signature Embedding: Writer Independent Offline Signature Verification with Deep Metric Learning,
+
+\bibitem{alvarez} 
+Gabe Alvarez, Offline Signature Verification with Convolutional Neural Networks,
+
+\bibitem{hafemann}
+Luiz G. Hafemann. Offline Handwritten Signature Verification - Literature Review, 2017.
+
+\bibitem{hafemann2}
+Luiz G. Hafemann. Learning features for offline handwritten signature verification using deep convolutional neural networks, 2017.
+
+\bibitem{intra_class}
+Edson J. R. Justino, Abdenain El Yacoubi, Flavio Bortolozzi, Robert Sabourin (2000). An off-line signature verification system using HMM and graphometric features. In Fourth IAPR International Workshop on Document Analysis Systems, Rio de Janeiro, pages 211-222.
+
+\bibitem {VGG}
+Karen Simonyan \& Andrew Zisserman.Very Deep Convolutional Networks for Large-Scale Image Recognition, 2015.
+
+\bibitem{examination of signatures}
+Jacques Mathyer, The Expert Examination of Signatures, Summer 1961.
+
+\bibitem{checks paper}
+Miguel A. Ferrer, J. Francisco Vargas, Aythami Morales, and Aarón Ordóñez, Robustness of Offline Signature Verification Based on Gray Level Features, June 2012.
+
+\bibitem{mcyt}
+Julian Fierrez-Aguilar, N. Alonso-Hermira, G. Moreno-Marquez, Javier Ortega-Garcia. An off-line signature verification system based on fusion of local and global information. In Biometric Authentication, pages 295-306. Springer, 2004.
+
+\bibitem{gpds}
+J.F. Vargas, M.A. Ferrer, C.M. Travieso, J.B. Alonso. Off-line Handwritten Signature GPDS-960 Corpus. In Ninth International Conference on Document Analysis and Recognition, volume 2, pages 764-768, September 2007.
+
+\bibitem{gpds synthetic}
+M.A. Ferrer, M. Diaz-Cabrera, A. Morales. Synthetic off-line signature image generation. In 2013 International Conference on Biometrics, pages 1-7, June 2013.
+
+\bibitem{utsig}
+A. Soleimani, K. Fouladi, B. N. Araabi. UTSig: A Persian offline signature dataset. IET Biometrics, vol. 6, no. 1, pp. 1-8, 2016.
+
+\bibitem{imagenet}
+Deng, J., Dong, W. Socher, R., Li, L.-J., Li, K., Fei-Fei, L. ImageNet: A Large-Scale Hierarchical Image Database, 2009
+
+\bibitem{anomaly detection survey}
+Varun Chandola, Arindam Banerjee, Vipin Kumar. Anomaly Detection: A Survey, 2009.
+
+\bibitem{otsu1985}
+Otsu, N. A Threshold Selection Method from Gray-level Histograms. IEEE Transactions on Systems, Man, and Cybernetics, 9(1), 62-66, 1979.
+
+\bibitem{scikit learn}
+Biblioteca Scikit-Learn. \url{https://scikit-learn.org/stable/modules/outlier_detection.html}
+
+\bibitem{site gpds}
+Base GPDS. \url{http://www.gpds.ulpgc.es/downloadnew/download.html}
+
+\end{thebibliography}
+
+\end{document}
